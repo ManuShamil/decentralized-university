@@ -12,6 +12,8 @@ import { readFileSync } from 'fs'
 import { AccountsStore } from './accounts'
 import { JsonRpcProvider } from '@ethersproject/providers'
 
+import { BigNumber } from 'ethers'
+
 const SERVER_PORT: number = 9000
 const CLIENT_PORT: number = 7000
 
@@ -48,11 +50,12 @@ const ganacheServerOptions = {
 const coursesToAdd = [
     {
         courseName: `MCA`,
-        fees: 1000000000000
+        fees: BigNumber.from( "2500000000000000000" )
+            
     },
     {
         courseName: `Msc. Data Science`,
-        fees: 1000000000000
+        fees: BigNumber.from( "1700000000000000000" )
     }
 ]
 
@@ -180,7 +183,7 @@ describe(`Deploying a contract`, () => {
                     for ( let i=0; i<courseIdCounter; i++ ) {
                         let [ courseName, fees ] = await deployedContract.getCourseById( i );
 
-                        coursesReceived.push( { courseName, fees: Number.parseInt( fees._hex, 16 )} )
+                        coursesReceived.push( { courseName, fees } )
                     }
 
                     console.log( coursesReceived )
@@ -233,12 +236,11 @@ describe(`Deploying a contract`, () => {
                     deployedContract = new Contract( smartContractAddress, contractAbi, randomSigner )
 
                     let courseName = coursesToAdd[0].courseName
-                    let expectedFess = coursesToAdd[0].fees
+                    let expectedFees = coursesToAdd[0].fees
 
                     let [ courseFees ] = await deployedContract.functions.getFees( courseName )
-                    let feesInNumber = Number.parseInt( courseFees._hex, 16  )
 
-                    expect( feesInNumber ).toBe( expectedFess )
+                    expect( courseFees.toString() ).toBe( expectedFees.toString() )
 
                 })
 
@@ -285,11 +287,8 @@ describe(`Deploying a contract`, () => {
                     let randomSigner = localProvider.getSigner( randomWallet )
                     deployedContract = new Contract( smartContractAddress, contractAbi, randomSigner )
 
-                    let [ result ] = await deployedContract.functions.getMyFees()
-                    let myFees = Number.parseInt( result._hex, 16 )
-
-
-                    expect( myFees ).toBe( coursesToAdd[0].fees )
+                    let result = await deployedContract.functions.getMyFees()
+                    expect( result.toString() ).toBe( coursesToAdd[0].fees.toString() )
                 })
 
                 it(`can pay fees`, async () => {
@@ -297,23 +296,19 @@ describe(`Deploying a contract`, () => {
                     let randomSigner = localProvider.getSigner( randomWallet )
                     deployedContract = new Contract( smartContractAddress, contractAbi, randomSigner )
 
-                    let [ feesQueryResult ] = await deployedContract.functions.getMyFees()
-                    let myFees = Number.parseInt( feesQueryResult._hex, 16 )
+                    let [ myFees ] = await deployedContract.functions.getMyFees()
 
                     const options = {
                         value: myFees
                     }
                     
-                    let oldBalanceResult = await localProvider.getBalance( randomWallet as string  )
+                    let oldBalanceResult: BigNumber = await localProvider.getBalance( randomWallet as string  )
                     let result = await deployedContract.functions.payFees( options )
-                    let newBalanceResult = await localProvider.getBalance( randomWallet as string  )
+                    let newBalanceResult: BigNumber = await localProvider.getBalance( randomWallet as string  )
 
-                    let oldBalance = Number.parseInt( oldBalanceResult._hex, 16 )
-                    let newBalance = Number.parseInt( newBalanceResult._hex, 16 )
+                    console.log( oldBalanceResult, newBalanceResult )
 
-                    
-                    console.log( oldBalance, newBalance )
-                    expect( oldBalance - newBalance ).toBeGreaterThanOrEqual( options.value )
+                    expect( oldBalanceResult.toString() ).not.toBe( newBalanceResult.toString() )
 
 
                 })

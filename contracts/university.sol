@@ -16,6 +16,7 @@ contract University {
     struct Student {
         address walletAddress;
         uint64 enrolledCourseId;
+        bool feesPaid;
     }
 
     Course[] universityCourses;
@@ -112,17 +113,20 @@ contract University {
     function enroll( uint64 courseId ) public returns ( bool ) {
 
         address requesterAddress = msg.sender;
-        
-        //! student has already enrolled for a course, <error>!
-        if ( indexOfStudent(requesterAddress) >= 0 )
-            return false;
 
         //! course does not exist on the database. 
         if ( courseId > courseIdCounter )
             return false;
 
+        int64 indexStudent = indexOfStudent(requesterAddress);
+        //! student has already enrolled for a course, <error>!
+        if ( indexStudent >= 0 ) {
+            enrolledStudents[ uint256(uint64(indexStudent)) ].enrolledCourseId = courseId;
+            return true;
+        }
+
         //! register student for the courseId
-        enrolledStudents.push( Student( msg.sender, courseId ) );
+        enrolledStudents.push( Student( msg.sender, courseId, false ) );
 
         return true;
     }
@@ -136,12 +140,25 @@ contract University {
         return getCourseFees( uint64( courseId ) ); 
     } 
 
+    function feesPaid( address requesterAddress ) public view returns( bool ) {
+        int64 indexStudent = indexOfStudent(requesterAddress);
 
+        if ( indexStudent < 0 ) return false;
+
+        return enrolledStudents[ uint256(uint64(indexStudent)) ].feesPaid;
+    }
 
     function payFees() public payable  {
 
         require(msg.value ==  uint256(getMyFees()), "Incorrect fee amount.");
 
         vaultAddress.transfer( uint256(getMyFees()) );
+
+        int64 indexStudent = indexOfStudent( msg.sender );
+        if ( indexStudent < 0 ) return;
+
+        enrolledStudents[ uint256(uint64(indexStudent)) ].feesPaid = true;
+
+
     }
 }

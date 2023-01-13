@@ -1,94 +1,78 @@
-import Head from 'next/head'
-import Image from 'next/image'
-import { Inter } from '@next/font/google'
-import styles from '../styles/Home.module.css'
+import '@fontsource/roboto/300.css';
+import '@fontsource/roboto/400.css';
+import '@fontsource/roboto/500.css';
+import '@fontsource/roboto/700.css';
+
 import Web3 from 'web3'
 import { AbiItem } from 'web3-utils'
-import { useEffect, useState } from 'react'
-const inter = Inter({ subsets: ['latin'] })
+import { use, useState } from 'react'
+import { useRouter } from 'next/router'
+import { 
+  Button, 
+  Card, 
+  CardActions,
+  Container,
+  Typography,
+  CardContent
+} from '@mui/material';
+
 
 import Template from '../components/template'
 
-
-let web3: Web3
-let myAccount: any
-
+import { contractAddress } from '../contract.json'
 import ContractAbi from '../../contracts/university_sol_University.json'
 
-export default function Home() {
+export default () => {
 
+  const router = useRouter()
+
+  let web3: Web3
   const [isMetaMaskConnected, setIsMetaMaskConnected] = useState(false)
 
-
   const connectToMetaMask = async () => {
-    if (window.ethereum) {
-      try {
-        // Request account access
-        await window.ethereum.enable();
-        // Connect to web3 provider
-        web3 = new Web3(window.ethereum);
-        setIsMetaMaskConnected(true);
-
-
-        let accounts = await web3.eth.getAccounts()
-
-        myAccount = accounts[5]
-
-
-      } catch (error) {
-        console.log(error);
-      }
-    } else {
-      console.log("MetaMask not detected");
-    }
-  }
-
-  const interactWithContract = async () => {
-    if ( !isMetaMaskConnected ) {
-      console.log(`MetaMask not connected!`)
+    if ( !window.ethereum ) {
+      console.error(`MetaMask not enabled!`)
       return
     }
 
-    let accounts = await web3.eth.getAccounts()
-    myAccount = accounts[0]
+    try {
+      web3 = new Web3( window.ethereum )
+      let [ myAccount ] = await web3.eth.requestAccounts()
+      setIsMetaMaskConnected( true )
 
-    console.log( myAccount )
-
-    web3 = new Web3(window.ethereum);
-    let contract = new web3.eth.Contract( ContractAbi as AbiItem[], `0x3Cc7B9a386410858B412B00B13264654F68364Ed` )
-
-    let myCourseFees = await contract.methods.getMyFees()
-                                            .send({ from: myAccount })
-
-    let courseName = `MCA`
-    let courseFees = 2500000000
-
-    contract.methods
-      .addCourse( web3.utils.asciiToHex( courseName ), courseFees )
-      .send( { from: myAccount } )
-      .then( ( result: any ) => {
-        console.log( result )
-      })
-
-    // contract.methods.getFees( web3.utils.asciiToHex( courseName ) )
-    //   .call()
-    //   .then( ( result: any ) => {
-    //     console.log( result )
-    //   })
-
-
-
-
-    console.log( contract );
-    
+      router.push(`/dashboard`)
+    } catch (e) {
+      setIsMetaMaskConnected( false )
+      console.error(e)
+    }
   }
+
 
   return (
     <>
       <Template>
-        <button onClick={ connectToMetaMask }> Connect to Metamask </button>
-        <button onClick={ interactWithContract }> Interact with contract </button>
+
+            <Container maxWidth="sm">
+
+              <Card variant="outlined" sx={{ maxWidth: 345 }} >
+
+                <CardContent>
+                  <Typography gutterBottom variant="h6" component="div">
+                    Decentralized UOV
+                  </Typography>
+                  <Typography variant="body2" color="text.primary" bgcolor="cyan">
+                    Login with your MetaMask wallet to enroll in Decentralized University
+                  </Typography>
+                </CardContent>
+                <CardActions style={{ justifyContent: 'center' }}>
+                  <Button size="small" onClick={ connectToMetaMask }> Connect to Metamask </Button>
+                </CardActions>
+              </Card>
+
+          </Container>
+
       </Template>
     </>
   )
+
 }

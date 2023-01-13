@@ -12,7 +12,7 @@ export default ( { children }: React.PropsWithChildren<{}> ) => {
       <Head>
         <title>Dapp - Decentralized University</title>
         <meta name="description" content="Decentralized University Dapp" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="viewport" content="initial-scale=1, width=device-width" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className={styles.main}>
@@ -20,7 +20,7 @@ export default ( { children }: React.PropsWithChildren<{}> ) => {
             { children }
         </div>
 
-        <div className={styles.center}>
+        {/* <div className={styles.center}>
           <Image
             className={styles.logo}
             src="/next.svg"
@@ -38,7 +38,7 @@ export default ( { children }: React.PropsWithChildren<{}> ) => {
               priority
             />
           </div>
-        </div>
+        </div> */}
       </main>
     </>
     )
